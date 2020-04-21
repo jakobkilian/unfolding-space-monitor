@@ -6,13 +6,19 @@ import hypermedia.net.*;
 long[] lastCall = new long[4];  //saves the millis() of the last call
 String[] inVal = new String[25];  //saves the millis() of the last call
 
-int proFps;
+float proFps;
 int countFrames;
 
 //USER_________
 int callHz=20;        //how often should the Raspi be called?
 
 long priTime;
+
+
+long lastIncMsg=0;
+boolean isPhone=false;
+
+
 
 void pri(String temp) {
   print(temp);
@@ -32,20 +38,30 @@ int myInt(String a)
 }
 
 //checks if there should be a new UDP call to the Raspberry
-boolean myTimer(int thisHz, int thisId) {
-  if ((millis()-lastCall[thisId])>(1000/thisHz)) {
-    return true;
-  } else {
-    return false;
+boolean myTimer(float thisHz, int thisId) {
+  boolean tmp=false;
+  if ((millis()-lastCall[thisId])>(1000.0f/thisHz)) {
+    tmp = true;
+    lastCall[thisId]=millis();
   }
+  return tmp;
 }
 
 
 void myText(String thisText, int thisRow, int thisColumn) {
-  PVector txt0 = new PVector(50, 30);
-  PVector txtGap = new PVector(50, 350);
+  PVector txt0 = new PVector(0, 0);
+  PVector txtGap = new PVector(0, 0);
   fill(255);
-  textSize(45);
+  if (isPhone) {
+    textSize(45);
+    txt0 = new PVector(50, 30);
+    txtGap = new PVector(50, 350);
+  }
+  if (!isPhone) {
+    textSize(18);
+    txt0 = new PVector(20, 20);
+    txtGap = new PVector(24, 150);
+  }
   if (thisText!=null)
     text(thisText, txt0.y + (thisColumn * txtGap.y), txt0.x + (thisRow * txtGap.x));
 }
@@ -53,10 +69,14 @@ void myText(String thisText, int thisRow, int thisColumn) {
 
 String current="";
 UDP udp;  // define the UDP object
+boolean printUdp=false;
+
+String ip       = "192.168.1.12";  // the remote IP address
+int port        = 9009;    // the destination port
 
 String left  = "left";  // the message to send
 String right  = "right" ;  // the message to send
-String ip       = "192.168.1.255";  // the remote IP address
+//String ip       = "192.168.1.255";  // the remote IP address
 int inPort        = 53333;    // the destination port
 int outPort        = 52222;    // the destination port
 String message="0";
@@ -64,14 +84,26 @@ String message="0";
 /**
  * init
  */
+
+// Run on Screen or Phone?
+public void settings() {
+  if (displayWidth>1200) {
+    size(1000, 900);
+    isPhone=false;
+  } else {
+    size(displayWidth, displayHeight);
+    isPhone=true;
+  }
+}
+
 void setup() {
-size(1000,1000);
+  //TODO id device..
   frameRate(50);
   noStroke();
   fill(0);
   // create a new datagram connection on port 6000
   // and wait for incomming message
-  udp = new UDP( this, 53333 );
+  udp = new UDP( this, 9012 );
   //udp.log( true );     // <-- printout the connection activity
   udp.listen( true );
 
@@ -82,39 +114,50 @@ size(1000,1000);
 
 //process events
 void draw() {
-  if (myTimer(1, 0))
+  //With fps of 30: send request do Raspi TODO: Ip static?
+  if (myTimer(30, 1)) {
+    udp.send( message, ip, port );
+  }
+  if (myTimer(0.25, 0))
   {
-    lastCall[0]=millis();
-    proFps=countFrames;
+    proFps=countFrames/4;
     countFrames=0;
   }
-
-
+  //print all msgs to the console
+  if (printUdp){
+  for (int i=0; i<25; i++) {
+    print(inVal[i] + "\t");
+  }
+  println();}
+  
   background(0);
-  long sysTime= (System.currentTimeMillis()/1000);
-  long offTime=sysTime-mylong(inVal[0]);
+
+  //Get get current time
+  long sysTime= (System.currentTimeMillis());
+  //calc the offset to last incoming message
+  long offTime=(sysTime-lastIncMsg)/1000;
 
 
-  if (offTime>1) {
+  if (offTime>0.9) {
     fill(100, 20, 20);
     rect(0, 0, 600, 55);      
-    myText(str(offTime), 0, 1);
-    myText("Sekunden", 0, 2);
+    myText(str(int(offTime)) + "s", 0, 1);
   } else {
     fill(20, 100, 20);
     rect(0, 0, 600, 55);
-    myText("Jetzt", 0, 1);
+    myText("now", 0, 1);
   }
-  myText("Letzte Verb", 0, 0);
+  myText("last received", 0, 0);
 
 
-  myText("last Frame:", 1, 0);
+  myText("last frame:", 1, 0);
   myText(inVal[1]+" ms", 1, 1);
-  myText("längste.:", 2, 0);
+  myText("longest fr.:", 2, 0);
   myText(inVal[2]+" ms", 2, 1);
   myText("frames:", 3, 0);
-  myText(inVal[3]+" fps", 3, 1);
-  myText("Distanz:", 4, 0);
+  myText(inVal[3]+" fps", 3, 2);
+  myText(inVal[0], 3, 1);
+  myText("distance:", 4, 0);
   if (inVal[4].length()>3) {
     myText(inVal[4].substring(0, 3)+" m", 4, 1);
   }
@@ -152,33 +195,63 @@ void draw() {
 
   myText("Process FPS:", 16, 0);
   myText(str(proFps), 16, 1);   
-fill(255);
-rect (200,1050,1000,1000);
+
+
+  //tiles
+  fill(255);
+  int  tilSiz=int((width*0.6)/3);
+  if (height/2<tilSiz*3) {
+    tilSiz=int((height*0.4)/3);
+  }
+  int pad=tilSiz/4;
+  int x0=int(width*0.15);
+  int y0=height-((2*pad)+(3*tilSiz));
   int c=15;
-  int  tilSiz=300;
+  textAlign(CENTER);
   for (int y=0; y<3; y++) {
     for (int x=0; x<3; x++) {
-      textSize(30);
-      fill(map(int(inVal[c]),0,255,255,0));
-      rect(250+(x*tilSiz), 1100+(y*tilSiz), tilSiz, tilSiz);
+      textSize(height/60);
+      int bright=int(inVal[c]);
+      fill(map(bright, 0, 255, 255, 0));
+      rect(x0+pad+(x*tilSiz), y0+pad+(y*tilSiz), tilSiz, tilSiz);
       fill(255);
-            text(inVal[c],370+(x*tilSiz), 1230+(y*tilSiz));
+      if (bright<70) { 
+        fill(0);
+      }
+      if (bright==0) {
+        text("-", x0+pad+tilSiz*0.5+(x*tilSiz), y0+pad+tilSiz*0.5+(y*tilSiz));
+      } else {
+        text(bright, x0+pad+tilSiz*0.5+(x*tilSiz), y0+pad+tilSiz*0.5+(y*tilSiz));
+      }
       c++;
     }
   }
+  textAlign(LEFT);
 }
 
-
 void receive( byte[] data, String ip, int inPort ) {  // <-- extended handler
+  lastIncMsg=System.currentTimeMillis();
   String temp = new String( data );
-  int idDig = temp.indexOf(":");
-  int id = myInt(temp.substring(0, idDig));
-  inVal[id]=temp.substring(idDig+1);
-  if (id==4) {
-    inVal[4]=str(float(inVal[4])/33.333333333);
-  }
 
-  if (id==0) {
-    countFrames++;
+  countFrames++;
+  //if string is not empty
+  while (temp.length()>0) {
+    //if string contains a |
+    if (temp.indexOf("|")!=-1) {
+      //get id of pipe
+      int pipeId = temp.indexOf("|");
+      //isolate elemt
+      String element = temp.substring(0, pipeId);
+      //if there is sth left after isolation: save it to temp
+      if (temp.length()>pipeId+1) {
+        temp = temp.substring(pipeId+1);
+      } else {
+        temp="";
+      }
+      //find end of id
+      int identId = element.indexOf(":");
+      int ident = myInt(element.substring(0, identId));
+      inVal[ident]=element.substring(identId+1);
+    }
   }
 }

@@ -69,6 +69,7 @@ public class UdpHandler : MonoBehaviour
     bool serversFound = false;
 
     //VON Processing TODO!
+
     String[] inVal = new String[130];
     byte[] img = new byte[200000];
     public Material depImgMat;
@@ -81,12 +82,20 @@ public class UdpHandler : MonoBehaviour
     MainManager mngr;
 
     [SerializeField]
-    public int strength
+    public int setImgSize
     {
         get { return imgSize; }
-        set { imgSize = value; }
+        set
+        {
+            imgSize = value;
+            //setImgSizefromFloat(imgSize);
+        }
     }
     public int imgSize = 5;
+
+    [SerializeField]
+    [Tooltip("Time between every ping to the server. Currently raspi resets after 50 frames")]
+    float pingTime = 1f;
 
     //texture can only be done in Main Thread
     bool newDepImgFrame = false;
@@ -94,7 +103,7 @@ public class UdpHandler : MonoBehaviour
     public void Start()
     {
         //init texture – later passed to material 
-        tex = new Texture2D(100, 100, TextureFormat.RGBA32, false);
+        //tex = new Texture2D(100, 100, TextureFormat.RGBA32, false);
 
         //find main
         mngr = GameObject.Find("MainManager").GetComponent("MainManager") as MainManager;
@@ -124,14 +133,14 @@ public class UdpHandler : MonoBehaviour
         else
         {
             if (!isReveivingThreadInit) initReceivingThread();
-            if (newDepImgFrame)
-            {
-                tex.LoadRawTextureData(img);
-                tex.Apply();
-                newDepImgFrame = false;
-            }
+            // if (newDepImgFrame)
+            // {
+            //     tex.LoadRawTextureData(img);
+            //     tex.Apply();
+            //     newDepImgFrame = false;
+            // }
             //has to run every update
-            depImgMat.mainTexture = tex;
+            //depImgMat.mainTexture = tex;
         }
 
     }
@@ -161,10 +170,10 @@ public class UdpHandler : MonoBehaviour
         receiveThread.IsBackground = true;
         receiveThread.Start();
         //Timer for sending the udp messages
-        InvokeRepeating("sendValuesInvRep", 0.1f, 0.04f);
+        InvokeRepeating("sendValuesInvRep", 0.3f, pingTime);
         visByGameObj.setVis(serverPanel, false);
 
-        imgObj.SetActive(true);
+        //imgObj.SetActive(true);
     }
 
     void initFindingThread()
@@ -173,7 +182,7 @@ public class UdpHandler : MonoBehaviour
         findClient = new UdpClient(localFindPort);
         if (client != null) client.Close();
         visByGameObj.setVis(serverPanel, true);
-        imgObj.SetActive(false);
+        //imgObj.SetActive(false);
         findThread = new Thread(new ThreadStart(lookForServers));
         findThread.IsBackground = true;
         findThread.Start();
@@ -185,6 +194,7 @@ public class UdpHandler : MonoBehaviour
         while (true)
         {
             //Do every ms
+            //Todo: good way to slow thread down?
             Thread.Sleep(1);
             try
             {
@@ -192,8 +202,8 @@ public class UdpHandler : MonoBehaviour
                 byte[] data = client.Receive(ref msgIP);
                 parseData(data);
                 // Bytes mit der UTF8-Kodierung in das Textformat kodieren.
-                string text = Encoding.UTF8.GetString(data);
-
+                string text = "";
+                if (debug) text = Encoding.UTF8.GetString(data);
                 // show received raw text in console
                 if (debug) print("Raw incoming:  " + text + "\n");
             }
@@ -281,51 +291,39 @@ public class UdpHandler : MonoBehaviour
 
     void parseData(byte[] data)
     { // <-- extended handler
-        int begin = 0;
-        int end = 0;
-        int id = 0;
         int idDelim = 0;
-        bool imgDelim = false;
-        int ind = 0;
-        //as long as there is no element containing jsut a '#' get vals:
-        //analyse if we're not yet at the end
-        while (ind < data.Length && imgDelim == false)
+        int valuesLength = 0;
+
+        for (int i = 0; i < data.Length; i++)
         {
-            while (data[ind] != '|')
+            if (data[i] == ':')
             {
-                //print( ind + " - ");
-                if (data[ind] == ':')
-                {
-                    idDelim = ind;
-                }
-                else if (data[ind] == '#')
-                {
-                    imgDelim = true;
-
-                }
-                ind++;
+                idDelim = i;
+                break;
             }
-            //println("found pipe at: " + ind);
-            end = ind;
-            if (idDelim > begin && imgDelim == false)
-            {
-                id = (int)(data[idDelim - 1]);
-                String tmpStr = "";
-                for (int i = idDelim + 1; i < end; i++)
-                {
-                    tmpStr += (char)data[i];
-                }
-                //println("content of " + id + "  is " + tmpStr);
-                inVal[id] = tmpStr;
-                if (debug) print("Incoming data at: \t\t\t " + id + ":\t" + tmpStr);
-            }
-            begin = end + 1;
-
-            ind = begin;
         }
-        mngr.setNewValues(inVal);
+        //If there is an id
+        if (idDelim > 0)
+        {
+            //parse id into string
+            string key = "";
+            for (int i = 0; i < idDelim; i++)
+            {
+                key += (char)data[i];
+            }
+            valuesLength = data.Length - idDelim - 1;
+            byte[] values = new byte[valuesLength];
+            //print("idDelim is at: " + idDelim);
+            //print("Data Length is: " + data.Length);
+            //print("Length of Values: " + valuesLength);
+            Buffer.BlockCopy(data, idDelim + 1, values, 0, valuesLength);
+            //print("Incoming Block: \t\t\t " + key + ": \t" + BitConverter.ToString(values));
+            mngr.setNewValue(key, values);
+        }
         //GetComponent<Renderer> ().material.mainTexture = texture;
+        /*
         int b = 0;
+
         while (ind < data.Length && imgDelim == true)
         {
             img[b] = (byte)(Mathf.Abs((int)(data[ind] - 255)));
@@ -343,6 +341,7 @@ public class UdpHandler : MonoBehaviour
             b += 4;
         }
         if (imgDelim == true) newDepImgFrame = true;
+        */
     }
 
     void udpSendString(String str)
@@ -389,18 +388,13 @@ public class UdpHandler : MonoBehaviour
         udpSendString("t\0");
     }
 
-       public void triggerCalibration()
+    public void triggerCalibration()
     {
         //muteMotors();
         udpSendString("c\0");
     }
 
-    //Set the imgSize variable (1-9) to modify resolution. 
-    public void setImgSizefromFloat(float size)
-    {
-        imgSize = (int)(size);
-        tex.Resize(imgSize * 20, imgSize * 20, TextureFormat.RGBA32, false);
-    }
+
 
     public bool searchForServer()
     {

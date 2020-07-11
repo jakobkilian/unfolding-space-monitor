@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
 
 public class MainManager : MonoBehaviour
 {
@@ -12,7 +13,7 @@ public class MainManager : MonoBehaviour
     long lastOn; //when did we receive the last frame?
 
     int udpfps; //frames per second on receiving side (local)
-    String[] motorVal = new String[9]; //motor vlaues 
+    byte[] motorVal = new byte[9]; //motor vlaues 
     int imgSize = 5; //1-9 steps for image resolution. multiplied by 20 (5 = 100px)
     long lastIncMsg; //ticks of the last incoming message
 
@@ -38,6 +39,14 @@ public class MainManager : MonoBehaviour
     bool setBackOnce = false;
 
     bool motorTest = false;
+
+    //image array
+    public GameObject imgObj;
+    byte[] img = new byte[200000];
+    public Material depImgMat;
+    Texture2D tex;
+    //texture can only be done in Main Thread
+    bool newDepImgFrame = false;
 
     String IP = "";
 
@@ -67,6 +76,9 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        //init texture – later passed to material 
+        tex = new Texture2D(100, 100, TextureFormat.RGBA32, false);
         //search udp client
         udp = GameObject.Find("UdpHandler").GetComponent("UdpHandler") as UdpHandler;
         if (udp == null)
@@ -79,6 +91,7 @@ public class MainManager : MonoBehaviour
             //Dosth
         }
 
+
     }
 
     // Update is called once per frame
@@ -88,6 +101,20 @@ public class MainManager : MonoBehaviour
         if (online)
         {
             updateUiElements();
+            if (newDepImgFrame)
+            {
+                //Todo: nicht jedes mal anmachen...
+                // imgObj.SetActive(false);
+                // imgObj.SetActive(true);
+                tex.LoadRawTextureData(img);
+                tex.Apply();
+                newDepImgFrame = false;
+                var data = tex.GetRawTextureData<Color32>();
+
+            }
+            //has to run every update
+
+            depImgMat.mainTexture = tex;
         }
         else
         {
@@ -115,12 +142,17 @@ public class MainManager : MonoBehaviour
         else if (lastOn > onlineThresh)
         {
             online = false;
+            imgObj.SetActive(false);
             camConnected = false;
             visByGameObj.setVis(waitingPane, true);
         }
         else
         {
+
             online = true;
+            //issue: Unity only updates img when tunred off and on
+            imgObj.SetActive(false);
+            imgObj.SetActive(true);
             textOnline.updtVals("online");
             setBackOnce = true;
             visByGameObj.setVis(waitingPane, false);
@@ -136,35 +168,135 @@ public class MainManager : MonoBehaviour
 
     }
 
-    public void setNewValues(String[] data)
+    public void setNewValue(string key, byte[] values)
     {
-
         lastIncMsg = DateTime.Now.Ticks; //save the arrival time of this data
-        frameCounter = int.Parse(data[0]);
-        timeSinceLastNewData = int.Parse(data[1]);
-        longestTimeNoData = int.Parse(data[2]);
-        remotefps = int.Parse(data[3]);
-        //find decimal dot
-        int found = data[5].IndexOf(".");
-        //add two digits after decimal dot
-        coreTemp = data[5].Substring(0, found + 3);
-        camConnected = Convert.ToBoolean(int.Parse(data[6]));
-        camCapturing = Convert.ToBoolean(int.Parse(data[7]));
-        libraryCrashNo = int.Parse(data[8]);
-        droppedAtBridge = int.Parse(data[9]);
-        droppedAtFC = int.Parse(data[10]);
-        tenSecsDrops = int.Parse(data[11]);
-        deliveredFrames = int.Parse(data[12]);
-        globalCycleTime = int.Parse(data[13]);
-        globalPauseTime = int.Parse(data[14]);
-        muted = Convert.ToBoolean(int.Parse(data[15]));
-        motorTest = Convert.ToBoolean(int.Parse(data[16]));
 
-        for (int i = 0; i < motorVal.Length; i++)
+
+
+        if (key == "0")
         {
-            motorVal[i] = data[i + 17];
+            frameCounter = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "1")
+        {
+            timeSinceLastNewData = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "2")
+        {
+            longestTimeNoData = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "3")
+        {
+            remotefps = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "coreTemp")
+        {
+            coreTemp = BitConverter.ToSingle(values, 0).ToString("0.00");
+        }
+        else if (key == "6")
+        {
+            camConnected = BitConverter.ToBoolean(values, 0);
+        }
+        else if (key == "7")
+        {
+            camCapturing = BitConverter.ToBoolean(values, 0);
         }
 
+        else if (key == "8")
+        {
+            libraryCrashNo = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "9")
+        {
+            droppedAtBridge = BitConverter.ToInt32(values, 0);
+
+        }
+        else if (key == "10")
+        {
+            droppedAtFC = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "11")
+        {
+            tenSecsDrops = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "12")
+        {
+            deliveredFrames = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "13")
+        {
+            globalCycleTime = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "14")
+        {
+            globalPauseTime = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "15")
+        {
+            muted = BitConverter.ToBoolean(values, 0);
+        }
+
+        else if (key == "16")
+        {
+            motorTest = BitConverter.ToBoolean(values, 0);
+        }
+        else if (key == "motors")
+        {
+            motorVal = values;
+        }
+        else if (key == "img")
+        {
+            //Debug.Log(BitConverter.ToString(values).Replace("-"," "));
+            int b = 0;
+            int ind = 0;
+            while (ind < values.Length)
+            {
+
+                img[b] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
+                img[b + 1] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
+                img[b + 2] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
+                if (values[ind] > 250 && values[ind] > 15)
+                {
+                    img[b + 3] = 0;
+                }
+                else if (values[ind] <= 150 || values[ind] <= 15)
+                {
+                    img[b + 3] = 255;
+                }
+                ind++;
+                b += 4;
+            }
+            newDepImgFrame = true;
+        }
+
+
+
+
+        /*
+                
+                frameCounter = int.Parse(data["0"]);
+                timeSinceLastNewData = int.Parse(data["1"]);
+                longestTimeNoData = int.Parse(data["2"]);
+                remotefps = int.Parse(data["3"]);
+ 
+                camConnected = Convert.ToBoolean(int.Parse(data["6"]));
+                camCapturing = Convert.ToBoolean(int.Parse(data["7"]));
+                libraryCrashNo = int.Parse(data["8"]);
+                droppedAtBridge = int.Parse(data["9"]);
+                droppedAtFC = int.Parse(data["10"]);
+                tenSecsDrops = int.Parse(data["11"]);
+                deliveredFrames = int.Parse(data["12"]);
+                globalCycleTime = int.Parse(data["13"]);
+                globalPauseTime = int.Parse(data["14"]);
+                muted = Convert.ToBoolean(int.Parse(data["15"]));
+                motorTest = Convert.ToBoolean(int.Parse(data["16"]));
+
+                for (int i = 0; i < motorVal.Length; i++)
+                {
+                    motorVal[i] = data[" motor" + i + 17];
+                }
+        */
     }
 
     public void setIP(String s)
@@ -183,7 +315,7 @@ public class MainManager : MonoBehaviour
         blobCapturing.updtVals(camCapturing);
         motorPanel.updtVals(motorVal);
         //motorPanel.updtVals(motorVal); else motorPanel.turnVisOff();
-        textFps.updtVals(remotefps.ToString());
+        textFps.updtVals(frameCounter.ToString());
         textCycle.updtVals(globalCycleTime.ToString() + "ms ");
         textPause.updtVals(globalPauseTime.ToString() + "ms ");
         textMaxPause.updtVals(longestTimeNoData.ToString() + "ms ");
@@ -196,5 +328,14 @@ public class MainManager : MonoBehaviour
         buttonTest.updtVals(!motorTest);
         textIP.updtVals(IP);
         textTemp.updtVals(coreTemp + "°C");
+    }
+
+
+    //Set the imgSize variable (1-9) to modify resolution. 
+    public void setImgSizefromFloat(float size)
+    {
+        imgSize = (int)(size);
+        udp.setImgSize = imgSize;
+        tex.Resize(imgSize * 20, imgSize * 20, TextureFormat.RGBA32, false);
     }
 }

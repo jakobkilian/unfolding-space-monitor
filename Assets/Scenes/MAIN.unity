@@ -3851,7 +3851,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 3.2633011
+  m_AspectRatio: 15.479172
 --- !u!114 &786349383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5791,6 +5791,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   online: 0
+  imgObj: {fileID: 888915788}
+  depImgMat: {fileID: 2100000, guid: 13795a9b8d90646e1b1c8499069b286a, type: 2}
   blobOnline: {fileID: 81808289}
   textOnline: {fileID: 1133275871}
   blobCamera: {fileID: 528589411}
@@ -8305,6 +8307,7 @@ MonoBehaviour:
   depImgMat: {fileID: 2100000, guid: 13795a9b8d90646e1b1c8499069b286a, type: 2}
   imgObj: {fileID: 888915788}
   imgSize: 5
+  pingTime: 1
 --- !u!1 &1714428770
 GameObject:
   m_ObjectHideFlags: 0

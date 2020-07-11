@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Text;
 
 public class ui_motorPanel : MonoBehaviour
 {
@@ -30,12 +32,12 @@ public class ui_motorPanel : MonoBehaviour
         }
     }
 
-    public void updtVals(string[] motorVal)
+    public void updtVals(byte[] motorVal)
     {
         for (int i = 0; i < motorImg.Length; i++)
         {
             //brightness of this motor:
-            byte b = byte.Parse(motorVal[i]);
+            byte b = motorVal[i];
             //Set Motor Color
             motorImg[i].color = new Color32(b, b, b, 255);
             //make the text color white/black depending on background
@@ -48,7 +50,8 @@ public class ui_motorPanel : MonoBehaviour
                 motorText[i].color = new Color32(255, 255, 255, 255);
             }
             //Set Text
-            motorText[i].text = motorVal[i];
+            motorText[i].text = Convert.ToString(motorVal[i]);
+            
         }
 
     }

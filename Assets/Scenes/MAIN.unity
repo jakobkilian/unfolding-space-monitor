@@ -1057,7 +1057,7 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1691900981}
+      - m_Target: {fileID: 1186786522}
         m_MethodName: setImgSizefromFloat
         m_Mode: 0
         m_Arguments:
@@ -3851,7 +3851,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 0
-  m_AspectRatio: 15.479172
+  m_AspectRatio: 3.7236767
 --- !u!114 &786349383
 MonoBehaviour:
   m_ObjectHideFlags: 0

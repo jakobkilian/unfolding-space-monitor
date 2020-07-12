@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 using UnityEngine;
 using System.Text;
 
@@ -186,7 +189,7 @@ public class MainManager : MonoBehaviour
         {
             longestTimeNoData = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "3")
+        else if (key == "fps")
         {
             remotefps = BitConverter.ToInt32(values, 0);
         }
@@ -194,33 +197,32 @@ public class MainManager : MonoBehaviour
         {
             coreTemp = BitConverter.ToSingle(values, 0).ToString("0.00");
         }
-        else if (key == "6")
+        else if (key == "isConnected")
         {
             camConnected = BitConverter.ToBoolean(values, 0);
         }
-        else if (key == "7")
+        else if (key == "isCapturing")
         {
             camCapturing = BitConverter.ToBoolean(values, 0);
         }
-
-        else if (key == "8")
+        else if (key == "libCrashes")
         {
             libraryCrashNo = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "9")
+        else if (key == "drpBridge")
         {
             droppedAtBridge = BitConverter.ToInt32(values, 0);
 
         }
-        else if (key == "10")
+        else if (key == "drpFC")
         {
             droppedAtFC = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "11")
+        else if (key == "drpMinute")
         {
             tenSecsDrops = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "12")
+        else if (key == "delivFrames")
         {
             deliveredFrames = BitConverter.ToInt32(values, 0);
         }
@@ -232,12 +234,12 @@ public class MainManager : MonoBehaviour
         {
             globalPauseTime = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "15")
+        else if (key == "isMuted")
         {
             muted = BitConverter.ToBoolean(values, 0);
         }
 
-        else if (key == "16")
+        else if (key == "isTestMode")
         {
             motorTest = BitConverter.ToBoolean(values, 0);
         }
@@ -298,6 +300,20 @@ public class MainManager : MonoBehaviour
                 }
         */
     }
+
+
+    public T FromByteArray<T>(byte[] data)
+    {
+        if (data == null)
+            return default(T);
+        BinaryFormatter bf = new BinaryFormatter();
+        using (MemoryStream ms = new MemoryStream(data))
+        {
+            object obj = bf.Deserialize(ms);
+            return (T)obj;
+        }
+    }
+
 
     public void setIP(String s)
     {

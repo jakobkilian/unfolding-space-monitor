@@ -15,10 +15,10 @@ public class MainManager : MonoBehaviour
     int onlineThresh = 700; //From what timespan on the device is considered as offline
     long lastOn; //when did we receive the last frame?
 
-    int udpfps; //frames per second on receiving side (local)
+    int localFps; //frames per second on receiving side (local)
     byte[] motorVal = new byte[9]; //motor vlaues 
     int imgSize = 5; //1-9 steps for image resolution. multiplied by 20 (5 = 100px)
-    long lastIncMsg; //ticks of the last incoming message
+    long lastIncFrameCounter; //ticks of the last incoming message
 
     int frameCounter;
     int timeSinceLastNewData;
@@ -35,6 +35,9 @@ public class MainManager : MonoBehaviour
     int deliveredFrames;
     int globalCycleTime; //time raspi needed for one cycle
     int globalPauseTime; //time rapsi waited for the next frame to come from libroyal
+    int processing;
+    int gloveSending;
+    int onNewData;
     bool muted = false;
     //Connect UDP Client
     UdpHandler udp;
@@ -61,9 +64,13 @@ public class MainManager : MonoBehaviour
     public ui_motorPanel motorPanel;
     public ui_text textFps;
     //Value Panel
+    public ui_text textFrameCounter;
     public ui_text textCycle;
     public ui_text textPause;
-    public ui_text textMaxPause;
+    public ui_text textOnNewData;
+    public ui_text textProcessing;
+    public ui_text textGloveSending;
+    public ui_text textDeliveredFrames;
     public ui_text textDropsBridge;
     public ui_text textDropsFc;
     public ui_text textDrops10s;
@@ -76,6 +83,8 @@ public class MainManager : MonoBehaviour
     public ui_button buttonMute;
     public ui_button buttonTest;
 
+    private long lastFpsCalc;
+    private int lastFpsCalcFrameCounter;
     // Start is called before the first frame update
     void Start()
     {
@@ -128,9 +137,9 @@ public class MainManager : MonoBehaviour
 
         }
         //check timespan since last frame
-        lastOn = (DateTime.Now.Ticks - lastIncMsg) / 10000;
+        lastOn = (DateTime.Now.Ticks - lastIncFrameCounter) / 10000;
         //print ("last on: " + lastOn);
-        //print (DateTime.Now.Ticks + " - " + lastIncMsg);
+        //print (DateTime.Now.Ticks + " - " + lastIncFrameCounter);
         //if bigger than
 
         if (lastOn > 10000)
@@ -173,13 +182,17 @@ public class MainManager : MonoBehaviour
 
     public void setNewValue(string key, byte[] values)
     {
-        lastIncMsg = DateTime.Now.Ticks; //save the arrival time of this data
-
-
-
-        if (key == "0")
+        if (key == "frameCounter")
         {
             frameCounter = BitConverter.ToInt32(values, 0);
+            lastIncFrameCounter = DateTime.Now.Ticks; //save the arrival time of this data
+            //If one second has passed: calc local fps
+            if ((DateTime.Now.Ticks - lastFpsCalc) > 10000000)
+            {
+                lastFpsCalc = DateTime.Now.Ticks;
+                localFps = frameCounter - lastFpsCalcFrameCounter;
+                lastFpsCalcFrameCounter = frameCounter;
+            }
         }
         else if (key == "1")
         {
@@ -226,14 +239,7 @@ public class MainManager : MonoBehaviour
         {
             deliveredFrames = BitConverter.ToInt32(values, 0);
         }
-        else if (key == "13")
-        {
-            globalCycleTime = BitConverter.ToInt32(values, 0);
-        }
-        else if (key == "14")
-        {
-            globalPauseTime = BitConverter.ToInt32(values, 0);
-        }
+
         else if (key == "isMuted")
         {
             muted = BitConverter.ToBoolean(values, 0);
@@ -271,8 +277,27 @@ public class MainManager : MonoBehaviour
             }
             newDepImgFrame = true;
         }
+        else if (key == "onNewData")
+        {
+            onNewData = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "processing")
+        {
+            processing = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "gloveSending")
+        {
+            gloveSending = BitConverter.ToInt32(values, 0);
+        }
 
-
+        else if (key == "wholeCycle")
+        {
+            globalCycleTime = BitConverter.ToInt32(values, 0);
+        }
+        else if (key == "pause")
+        {
+            globalPauseTime = BitConverter.ToInt32(values, 0);
+        }
 
 
         /*
@@ -331,19 +356,24 @@ public class MainManager : MonoBehaviour
         blobCapturing.updtVals(camCapturing);
         motorPanel.updtVals(motorVal);
         //motorPanel.updtVals(motorVal); else motorPanel.turnVisOff();
-        textFps.updtVals(frameCounter.ToString());
-        textCycle.updtVals(globalCycleTime.ToString() + "ms ");
-        textPause.updtVals(globalPauseTime.ToString() + "ms ");
-        textMaxPause.updtVals(longestTimeNoData.ToString() + "ms ");
+        textFrameCounter.updtVals(frameCounter.ToString());
+        textFps.updtVals(localFps.ToString());
+
         textDropsBridge.updtVals(droppedAtBridge.ToString());
         textDropsFc.updtVals(droppedAtFC.ToString());
         textDrops10s.updtVals(tenSecsDrops.ToString());
         TextLibCrashes.updtVals(libraryCrashNo.ToString());
-        //textPause.updtVals (globalPauseTime.ToString () + "ms ");
+        textDeliveredFrames.updtVals(deliveredFrames.ToString());
         buttonMute.updtVals(!muted);
         buttonTest.updtVals(!motorTest);
         textIP.updtVals(IP);
         textTemp.updtVals(coreTemp + "°C");
+        //times
+        textCycle.updtVals((globalCycleTime/1000).ToString() + "ms ");
+        textPause.updtVals((globalPauseTime/1000).ToString() + "ms ");
+        textOnNewData.updtVals(onNewData.ToString() + "us ");
+        textProcessing.updtVals(processing.ToString() + "us ");
+        textGloveSending.updtVals(gloveSending.ToString() + "us ");
     }
 
 

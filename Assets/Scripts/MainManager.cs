@@ -33,6 +33,7 @@ public class MainManager : MonoBehaviour
     int droppedAtFC; //frames drops at "FC" in libroyal
     int tenSecsDrops; //sum of all drops over 10 secs
     int deliveredFrames;
+    int lockFails;
     int globalCycleTime; //time raspi needed for one cycle
     int globalPauseTime; //time rapsi waited for the next frame to come from libroyal
     int processing;
@@ -75,6 +76,7 @@ public class MainManager : MonoBehaviour
     public ui_text textDropsFc;
     public ui_text textDrops10s;
     public ui_text TextLibCrashes;
+    public ui_text textLockFails;
 
     public ui_text textIP;
     public ui_text textTemp;
@@ -82,6 +84,7 @@ public class MainManager : MonoBehaviour
     public GameObject waitingPane;
     public ui_button buttonMute;
     public ui_button buttonTest;
+    public TimePlotter tp;
 
     private long lastFpsCalc;
     private int lastFpsCalcFrameCounter;
@@ -239,6 +242,10 @@ public class MainManager : MonoBehaviour
         {
             deliveredFrames = BitConverter.ToInt32(values, 0);
         }
+                else if (key == "lockFails")
+        {
+            lockFails = BitConverter.ToInt32(values, 0);
+        }
 
         else if (key == "isMuted")
         {
@@ -364,16 +371,22 @@ public class MainManager : MonoBehaviour
         textDrops10s.updtVals(tenSecsDrops.ToString());
         TextLibCrashes.updtVals(libraryCrashNo.ToString());
         textDeliveredFrames.updtVals(deliveredFrames.ToString());
+        textLockFails.updtVals(lockFails.ToString());
         buttonMute.updtVals(!muted);
         buttonTest.updtVals(!motorTest);
         textIP.updtVals(IP);
         textTemp.updtVals(coreTemp + "°C");
         //times
-        textCycle.updtVals((globalCycleTime/1000).ToString() + "ms ");
-        textPause.updtVals((globalPauseTime/1000).ToString() + "ms ");
+        textCycle.updtVals((globalCycleTime / 1000).ToString() + "ms ");
+        tp.addVal(3, (float)globalCycleTime);
+        textPause.updtVals((globalPauseTime / 1000).ToString() + "ms ");
         textOnNewData.updtVals(onNewData.ToString() + "us ");
+        tp.addVal(0, (float)onNewData);
         textProcessing.updtVals(processing.ToString() + "us ");
+        tp.addVal(1, (float)processing);
         textGloveSending.updtVals(gloveSending.ToString() + "us ");
+        tp.addVal(2, (float)gloveSending);
+        tp.next();
     }
 
 

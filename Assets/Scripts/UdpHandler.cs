@@ -434,4 +434,8 @@ public class UdpHandler : MonoBehaviour
         serversFound = false;
         CancelInvoke();
     }
+
+    public void setCameraUseCase(int useCase){
+
+udpSendString("u" + useCase + "\0");}
 }

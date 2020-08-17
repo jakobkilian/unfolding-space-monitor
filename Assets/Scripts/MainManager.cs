@@ -242,7 +242,7 @@ public class MainManager : MonoBehaviour
         {
             deliveredFrames = BitConverter.ToInt32(values, 0);
         }
-                else if (key == "lockFails")
+        else if (key == "lockFails")
         {
             lockFails = BitConverter.ToInt32(values, 0);
         }
@@ -267,17 +267,15 @@ public class MainManager : MonoBehaviour
             int ind = 0;
             while (ind < values.Length)
             {
-
-                img[b] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
-                img[b + 1] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
-                img[b + 2] = (byte)(Mathf.Abs((int)(values[ind] - 255)));
-                if (values[ind] > 250 && values[ind] > 15)
+                int thisVal = (int)(Mathf.Abs((values[ind] - 255)));
+                img[b] = (byte)thisVal;
+                img[b + 1] = (byte)thisVal;
+                img[b + 2] = (byte)thisVal;
+                img[b + 3] = (byte)255;
+                //don't show unsave background pixels
+                if (thisVal < 32)
                 {
-                    img[b + 3] = 0;
-                }
-                else if (values[ind] <= 150 || values[ind] <= 15)
-                {
-                    img[b + 3] = 255;
+                    img[b + 3] = (byte)0;
                 }
                 ind++;
                 b += 4;

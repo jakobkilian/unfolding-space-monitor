@@ -376,14 +376,17 @@ public class MainManager : MonoBehaviour
         textTemp.updtVals(coreTemp + "°C");
         //times
         textCycle.updtVals((globalCycleTime / 1000).ToString() + "ms ");
-        tp.addVal(3, (float)globalCycleTime);
+        tp.addVal(0, (float)globalCycleTime);
         textPause.updtVals((globalPauseTime / 1000).ToString() + "ms ");
         textOnNewData.updtVals(onNewData.ToString() + "us ");
-        tp.addVal(0, (float)onNewData);
+        tp.addVal(3, (float)onNewData);
         textProcessing.updtVals(processing.ToString() + "us ");
-        tp.addVal(1, (float)processing);
+        tp.addVal(2, (float)onNewData+(float)processing);
         textGloveSending.updtVals(gloveSending.ToString() + "us ");
-        tp.addVal(2, (float)gloveSending);
+        tp.addVal(1, (float)onNewData+(float)processing+(float)gloveSending);
+
+
+
         tp.next();
     }
 

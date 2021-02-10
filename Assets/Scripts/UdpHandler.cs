@@ -223,6 +223,7 @@ public class UdpHandler : MonoBehaviour
         {
             //Do every 0.5s
             Thread.Sleep(500);
+            if (debug) print("try to find client");
             String serverName = "";
             String serverIP = "";
             try
@@ -231,6 +232,7 @@ public class UdpHandler : MonoBehaviour
                 byte[] data = findClient.Receive(ref anyIP);
                 // Convert and save name to string
                 serverName = Encoding.UTF8.GetString(data);
+                if (debug) print("GOT client" + serverName);
                 // convert and save IP to string
                 serverIP = anyIP.Address.ToString();
             }
@@ -243,6 +245,7 @@ public class UdpHandler : MonoBehaviour
             {
                 try
                 {
+                    if (debug) print("ADD to list");
                     //Add the item to the servers list to save the IP
                     servers.Add(serverName, serverIP);
                     //Add the name to the Dropdown to make it selectable
@@ -435,7 +438,9 @@ public class UdpHandler : MonoBehaviour
         CancelInvoke();
     }
 
-    public void setCameraUseCase(int useCase){
+    public void setCameraUseCase(int useCase)
+    {
 
-udpSendString("u" + useCase + "\0");}
+        udpSendString("u" + useCase + "\0");
+    }
 }

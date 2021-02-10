@@ -52,9 +52,12 @@ public class TimePlotter : MonoBehaviour
         }
         MyColors = new Color[instances];
         MyColors[0] = Color.white;
-        MyColors[1] = new Color(0.45f, 1.0f, 0.5f, 0.6f);
-        MyColors[2] = new Color(0.9f, 1.0f, 0.5f, 0.6f);
-        MyColors[3] = new Color(0.6f, 1.0f, 0.5f, 0.6f);
+        MyColors[1] = new Color();
+        MyColors[2] = new Color();
+        MyColors[3] = new Color();
+        MyColors[1] = Color.HSVToRGB(0.15f, 0.5f, 0.8f);
+        MyColors[2] = Color.HSVToRGB(0.9f, 0.5f, 0.8f);
+        MyColors[3] = Color.HSVToRGB(0.6f, 0.5f, 0.8f);
 
 
 
@@ -93,8 +96,8 @@ public class TimePlotter : MonoBehaviour
             i++;
             if (i >= DataPoints) { i = 0; }
             print0[Cnt] = valArray[0, i];
-            print1[Cnt] = valArray[0, i] +valArray[1, i];
-            print2[Cnt] = valArray[0, i] +valArray[1, i]+ valArray[2, i];
+            print1[Cnt] = valArray[1, i];
+            print2[Cnt] = valArray[2, i];
             print3[Cnt] = valArray[3, i];
             XValues[Cnt] = Cnt;
         }
@@ -115,6 +118,7 @@ public class TimePlotter : MonoBehaviour
             //zurück zum Anfang
             curPos = 0;
         }
+        //print (plot + " _ " + newVal);
         valArray[plot, curPos] = newVal;
     }
 

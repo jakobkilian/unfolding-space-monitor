@@ -125,6 +125,13 @@ public class UdpHandler : MonoBehaviour
             if (!isFindingThreadInit) initFindingThread();
             if (serversFound)
             {
+
+//        IP = servers[drop.options[drop.value].text];
+//        ConnectedToServer = true;
+//        findThread.Abort();
+//        isFindingThreadInit = false;
+
+
                 serversFound = false;
                 drop.transform.gameObject.SetActive(true);
                 lookingText.transform.gameObject.SetActive(false);

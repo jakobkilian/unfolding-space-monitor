@@ -105,8 +105,6 @@ public class MainManager : MonoBehaviour
         {
             //Dosth
         }
-
-
     }
 
     // Update is called once per frame
@@ -268,11 +266,12 @@ public class MainManager : MonoBehaviour
             while (ind < values.Length)
             {
                 int thisVal = (int)(Mathf.Abs((values[ind] - 255)));
-                img[b] = (byte)thisVal;
-                img[b + 1] = (byte)thisVal;
-                img[b + 2] = (byte)thisVal;
+                Color tempcol = Color.HSVToRGB(thisVal / 255.0f, 1, 1);
+                img[b] = (byte)(tempcol.r*200);
+                img[b + 1] = (byte)(tempcol.g*255);
+                img[b + 2] = (byte)(tempcol.b*255);
                 img[b + 3] = (byte)255;
-                //don't show unsave background pixels
+                //don't show uncertain background pixels
                 if (thisVal < 32)
                 {
                     img[b + 3] = (byte)0;
@@ -381,9 +380,9 @@ public class MainManager : MonoBehaviour
         textOnNewData.updtVals(onNewData.ToString() + "us ");
         tp.addVal(3, (float)onNewData);
         textProcessing.updtVals(processing.ToString() + "us ");
-        tp.addVal(2, (float)onNewData+(float)processing);
+        tp.addVal(2, (float)onNewData + (float)processing);
         textGloveSending.updtVals(gloveSending.ToString() + "us ");
-        tp.addVal(1, (float)onNewData+(float)processing+(float)gloveSending);
+        tp.addVal(1, (float)onNewData + (float)processing + (float)gloveSending);
 
 
 

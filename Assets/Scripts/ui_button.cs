@@ -26,7 +26,7 @@ public class ui_button : MonoBehaviour
         //if false: color the blob green
         if (!status)
         {
-            thisImg.color = new Color32(130, 130, 130, 255);
+            thisImg.color = new Color32(111, 166, 255, 255);
         }
         else
         {

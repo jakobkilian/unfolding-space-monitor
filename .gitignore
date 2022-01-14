@@ -1,7 +1,9 @@
 # ====== #
 # Custom #
 # ====== #
-builds*
+/[Bb]uild/*
+/Logs/*
+
 
 
 
@@ -10,9 +12,7 @@ builds*
 # =============== #
 [Tt]emp/
 [Oo]bj/
-#[Bb]uild
-/[Bb]uilds/
-/[Ll]ibrary/
+[Ll]ibrary/
 sysinfo.txt
 *.stackdump
 /Assets/AssetStoreTools*

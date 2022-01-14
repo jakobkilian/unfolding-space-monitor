@@ -18,6 +18,8 @@ The monitor-app is done in Unity 3D (version 2020.3.25f1 LTS) project. It theref
 
 The app is working quite fast and reliable but is – in very large parts – still in a draft state. So don't expect to much. The app is responsive to some degree but should always be used in landscape. 
 
+I deleted the Source Sans TTF files due to unknown license situation. You have to add them manually to the `Assets/Fonts` folder. 
+
 ## Install
 
 Just go to the latest release, download the attached build for your system and run.

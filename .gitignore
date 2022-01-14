@@ -1,7 +1,8 @@
 # ====== #
 # Custom #
 # ====== #
-/[Bb]uild/*
+[Bb]uild/*
+Assets/Fonts/*
 
 # =============== #
 # Unity generated #

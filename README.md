@@ -4,11 +4,7 @@ This repo contains the monitor-app for the “Unfolding Space” glove – a pro
 
 
 
-
-
-
-
-
+![screen-standard](/Users/jakobkilian/Documents/UNFOLDING/CODE/unfolding_monitor/images/screen-standard.png)
 
 
 
@@ -30,11 +26,11 @@ Just go to the latest release, download the attached build for your system and r
 
 Your device needs to be in a network that allows udp protocol. If there is an Unfolding Space Glove in the same network, the app will spot it and offer you a dropdown to aquire a connection to it. 
 
-When connected you can see the following GUI Elements:
-
-
+![screen-searching](/Users/jakobkilian/Documents/UNFOLDING/CODE/unfolding_monitor/images/vid-search.mp4)
 
 When you click/tap on the top bar, another menu will open up with more background information and a plot of the time that the glove needed for the processing of one frame. Here you can also go back to the selection menu:
+
+![screen-searching](/Users/jakobkilian/Documents/UNFOLDING/CODE/unfolding_monitor/images/vid-values.mp4)
 
 
 
@@ -42,13 +38,13 @@ When you click/tap on the top bar, another menu will open up with more backgroun
 
 You can stop all motors by clicking on *Mute Motors*. When the glove is held in a way that it turns off the motors itself (e.g. if you let the arm hang down it turns off), the mute botton will light up as well.
 
-
+![screen-searching](/Users/jakobkilian/Documents/UNFOLDING/CODE/unfolding_monitor/images/vid-mute.mp4)
 
 ### Test Motors
 
 By clicking on *Test Mode* you can test the function of motors by clicking on them: 
 
-
+![screen-searching](/Users/jakobkilian/Documents/UNFOLDING/CODE/unfolding_monitor/images/vid-test.mp4)
 
 
 

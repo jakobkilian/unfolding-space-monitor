@@ -2,10 +2,6 @@
 # Custom #
 # ====== #
 /[Bb]uild/*
-/Logs/*
-
-
-
 
 # =============== #
 # Unity generated #
@@ -13,6 +9,7 @@
 [Tt]emp/
 [Oo]bj/
 [Ll]ibrary/
+[Ll]ogs/
 sysinfo.txt
 *.stackdump
 /Assets/AssetStoreTools*
